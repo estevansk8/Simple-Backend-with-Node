@@ -27,14 +27,42 @@ const alunos = [
     },
 ]
 
-app.get("/alunos", (req, res) => {
-    res.status(200).json(alunos);
-} );
 
 app.post("/alunos", (req, res) => {
     alunos.push(req.body);
     res.status(201).send("Aluno cadastrado com sucesso!");
 } );
+
+
+app.get("/alunos", (req, res) => {
+    res.status(200).json(alunos);
+} );
+
+app.get("/alunos/aprovados", (req, res) => {
+    const status = alunos.map(aluno => {
+        const media = (aluno.nota1 + aluno.nota2) / 2; // Calcula a média
+        return {
+            nome: aluno.nome,
+            status: media >= 6 ? "aprovado" : "reprovado" // Define o status
+        };
+    });
+
+    res.status(200).json(status);
+});
+
+
+app.get("/alunos/medias", (req, res) => {
+    const medias = alunos.map(aluno => {
+        const media = ((aluno.nota1 + aluno.nota2) / 2).toFixed(2); 
+        return {
+            nome: aluno.nome,
+            media: Number(media),
+        };
+    });
+
+    res.status(200).json(medias);
+});
+
 
 app.get("/alunos/:id", (req, res) => {
     const index = buscaAluno(req.params.id);
@@ -46,6 +74,7 @@ app.get("/alunos/:id", (req, res) => {
     res.status(200).json( alunos[index] );
 });
 
+
 app.put("/alunos/:id", (req, res) => {
     const index = buscaAluno(req.params.id);
 
@@ -54,6 +83,9 @@ app.put("/alunos/:id", (req, res) => {
     }
 
     alunos[index].nome = req.body.nome;
+    alunos[index].ra = req.body.ra;
+    alunos[index].nota1 = req.body.nota1;
+    alunos[index].nota2 = req.body.nota2;
 
     res.status(200).json( alunos[index] );
 });
