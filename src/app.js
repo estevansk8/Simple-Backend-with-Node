@@ -1,14 +1,9 @@
 import express from "express";
 
 const app = express();
+app.use(express.json());
+
 const alunos = [
-    {
-        id:1,
-        nome: "Asdrubal",
-        ra: "123456",
-        nota1: 10.0,
-        nota2: 7.0
-    },
     {
         id:1,
         nome: "Asdrubal",
@@ -59,9 +54,6 @@ app.put("/alunos/:id", (req, res) => {
     }
 
     alunos[index].nome = req.body.nome;
-    alunos[index].ra = req.body.ra;
-    alunos[index].nota1 = req.body.nota1;
-    alunos[index].nota2 = req.body.nota2;
 
     res.status(200).json( alunos[index] );
 });
@@ -72,7 +64,7 @@ app.delete("/alunos/:id", (req, res) => {
     if (index === -1) {
         return res.status(404).json( { message: "Aluno não encontrado!" } );
     }
-    
+
     alunos.splice( index, 1 );
     res.status(200).json( { message: "Aluno removido!" } );
     console.log(alunos);
