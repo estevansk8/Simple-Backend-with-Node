@@ -35,38 +35,27 @@ const alunos = [
 
 // Rota register, para criar o usuário:
 
-app.post('/register', async(req,res) => {
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
 
-    const {username, password} = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const hashedPassword = await bcrypt.hash(password,10);
-
-    users.push( {username, password: hashedPassword} );
+    users.push({ username, password: hashedPassword });
     console.log(users);
 
-    res.status(201).send('User registered');
-
+    res.status(201).json({ message: 'User registered' });
 });
 
 
-
 // Rota login, para retornar o jwt:
-app.post('/login', async(req,res) => {
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
 
-    const {username, password} = req.body;
+    const user = users.find(user => user.username === username);
 
-    // Procurar o usuário e senha na "base de dados":
-    const user = users.find( user => user.username === username );
-
-    // Se não achou, ou a senha decriptografada não é a correta,
-    // retorna erro:
-
-    if ( !user || !( await bcrypt.compare(password, user.password) ) ) {
-
-        return res.status(401).send('Login Incorreto!');
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ message: 'Login Incorreto!' });
     }
-
-    // Se está tudo ok, crie e retorna o jwt:
 
     const token = jwt.sign(
         { username: user.username },
@@ -74,9 +63,11 @@ app.post('/login', async(req,res) => {
         { expiresIn: '1h', algorithm: 'HS256' }
     );
 
-    res.json(token);
-    console.log('Login efetuado pelo usuário ' + user.username);
-
+    console.log(`Login efetuado pelo usuário ${user.username}`);
+    res.json({
+        message: `Login efetuado pelo usuário ${user.username}`,
+        jwt: token
+    });
 });
 
 
@@ -87,35 +78,30 @@ app.post('/login', async(req,res) => {
 // Vamos quebrar no espaço e pegar o elemento [1] (o token).
 
 const authenticateJWT = (req, res, next) => {
-
     const authHeader = req.header('Authorization');
     console.log('Authorization: ' + authHeader);
 
     let token;
-    
+
     if (authHeader) {
         const parts = authHeader.split(' ');
         if (parts.length === 2) {
             token = parts[1];
         }
     }
-    
+
     if (!token) {
-        return res.status(401).json('Acesso negado. Token não fornecido.');
+        return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
     }
-    
+
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-
         if (err) {
-
             if (err.name === 'TokenExpiredError') {
-                return res.status(401).send('Acesso negado. Token expirado.');
-
+                return res.status(401).json({ message: 'Acesso negado. Token expirado.' });
             } else if (err.name === 'JsonWebTokenError') {
-                return res.status(403).send('Acesso negado. Token inválido.');
-
+                return res.status(403).json({ message: 'Acesso negado. Token inválido.' });
             } else {
-                return res.status(403).send('Acesso negado. Erro na verificação do token.');
+                return res.status(403).json({ message: 'Acesso negado. Erro na verificação do token.' });
             }
         }
 
@@ -124,15 +110,15 @@ const authenticateJWT = (req, res, next) => {
         const issuedAtISO = new Date(user.iat * 1000).toISOString();
         const expiresAtISO = new Date(user.exp * 1000).toISOString();
 
-        console.log(`Token validado para usuário: ${user.username}
-            Emitido em: ${issuedAtISO}
-            Expira em: ${expiresAtISO}
-        `);
+        console.log(
+            `Token validado para usuário: ${user.username}
+             Emitido em: ${issuedAtISO}
+             Expira em: ${expiresAtISO}`
+        );
 
         next();
     });
-
-}
+};
 
 
 
@@ -152,7 +138,7 @@ app.use(authenticateJWT);
 
 app.post("/alunos", (req, res) => {
     alunos.push(req.body);
-    res.status(201).send("Aluno cadastrado com sucesso!");
+    res.status(201).json({ message: 'Aluno Cadastrado com Sucesso!' });
 } );
 
 
