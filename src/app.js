@@ -34,7 +34,6 @@ const alunos = [
 ]
 
 // Rota register, para criar o usuário:
-
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
@@ -130,9 +129,8 @@ app.get('/protected', authenticateJWT, (req,res) => {
     console.log("Usuário autorizado:" + req.user);
     res.send('Você conseguiu acessar uma rota protegida');
 });*/
-
-
 // Aplica o middleware em todas as rotas que vierem depois:
+
 app.use(authenticateJWT);
 
 
